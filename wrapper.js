@@ -1,0 +1,1 @@
+require("sys").debug(JSON.stringify(module, null, 2));
