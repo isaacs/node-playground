@@ -1,5 +1,5 @@
-var samedirModule = require("./samedir-module");
+require.async("./media/json").addCallback(function () {
+  exports.Media = "media";
 
-exports.Media = "media";
-
-require("sys").debug(samedirModule.ok);
+  require("sys").debug("ok");
+})

@@ -5,13 +5,13 @@ function d (m, o) {
 }
 // d("before",module);
 
-require.setExports("this is ok");
+module.setExports("this is ok");
 
 
 require("./b");
 // d("after",module);
 try {
-  require.setExports("but this isn't");
+  module.setExports("but this isn't");
 } catch (ex) {
   sys.debug("got an error trying to setExport: "+ex.message);
 }

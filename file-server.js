@@ -16,7 +16,6 @@ var sys = require('sys'),
 http.createServer(function (req, res) {
   sys.debug("requesting: "+docroot+req.uri.path);
   
-  
   var file = docroot+req.uri.path;
   posix.stat(file)
     .addCallback(function (stat) {
@@ -28,6 +27,7 @@ http.createServer(function (req, res) {
             // would be nice to guess at the content-type from filename or something
             "content-length" : stat.size
           });
+          
           readAndSend(fd);
           function readAndSend (fd) {
             posix.read(fd, 1024, null, "binary")
