@@ -18,6 +18,7 @@ http.createServer(function (req, res) {
   
   var file = docroot+req.uri.path;
   posix.stat(file)
+    .addErrback(err[404](res))
     .addCallback(function (stat) {
       // file exists.
       posix.open(file, process.O_RDONLY, 0666)
@@ -40,7 +41,6 @@ http.createServer(function (req, res) {
               });
           }
         });
-    })
-    .addErrback(err[404](res));
+    });
 }).listen(8000);
 sys.puts('Server running at http://127.0.0.1:8000/');
