@@ -22,7 +22,7 @@ exports.useCache = true;
 exports.cache = {};
 
 function parse (src, filename) {
-  var safeName = require("path").filename(filename).replace(/[^a-zA-Z0-9_]/g, '_'),
+  var safeName = path.filename(filename).replace(/[^a-zA-Z0-9_]/g, '_'),
     
     STATE_JS = "STATE_JS",
     STATE_JS_CODE = "STATE_JS_CODE",
