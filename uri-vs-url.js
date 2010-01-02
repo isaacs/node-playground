@@ -3,6 +3,11 @@ var uri = require("uri"),
   assert = require("assert"),
   w = function (m) {
     process.stdio.writeError(m+"\n");
+  },
+  avg = function (nums) {
+    var sum = 0;
+    nums.forEach(function (n) { sum+=n });
+    return sum/nums.length;
   };
 
 var parseTests = {
@@ -162,15 +167,32 @@ var parseTests = {
   }
 };
 
+var resolveTests = [
+  // [from, path, expected]
+  ["/foo/bar/baz", "quux", "/foo/bar/quux"],
+  ["/foo/bar/baz", "quux/asdf", "/foo/bar/quux/asdf"],
+  ["/foo/bar/baz", "quux/baz", "/foo/bar/quux/baz"],
+  ["/foo/bar/baz", "../quux/baz", "/foo/quux/baz"],
+  ["/foo/bar/baz", "/bar", "/bar"],
+  ["/foo/bar/baz/", "quux", "/foo/bar/baz/quux"],
+  ["/foo/bar/baz/", "quux/baz", "/foo/bar/baz/quux/baz"],
+  ["/foo/bar/baz", "../../../../../../../../quux/baz", "/quux/baz"],
+  ["/foo/bar/baz", "../../../../../../../quux/baz", "/quux/baz"],
+  ["foo/bar", "../../../baz", "../../baz"],
+  ["foo/bar/", "../../../baz", "../baz"],
+  ["http://u:p@h.com/p/a/t/h?s#hash", "https:#hash2", "https://u:p@h.com/p/a/t/h?s#hash2" ],
+  ["http://u:p@h.com/p/a/t/h?s#hash", "https:/p/a/t/h?s#hash2", "https://u:p@h.com/p/a/t/h?s#hash2" ],
+  ["http://u:p@h.com/p/a/t/h?s#hash", "https://u:p@h.com/p/a/t/h?s#hash2", "https://u:p@h.com/p/a/t/h?s#hash2" ],
+  ["http://u:p@h.com/p/a/t/h?s#hash", "https:/a/b/c/d", "https://u:p@h.com/a/b/c/d" ],
+  ["/foo/bar/baz", "/../etc/passwd", "/etc/passwd"]
+];
+var uriFormatTests = {};
+var urlFormatTests = {};
+
 w("\n\n---- PARSE TESTS ----\n");
 for (var i in parseTests) {
-  var urlParsed = url.parse(i);
-  try {
-    assert.deepEqual(parseTests[i], urlParsed);
-  } catch (ex) {
-    w("\033[41;1;30murl fail\033[0m "+i);
-  }
-  var uriParsed = uri.parse(i),
+  var urlParsed = url.parse(i),
+    uriParsed = uri.parse(i),
     u = {
       href : uriParsed.url,
       protocol : (uriParsed.protocol ? uriParsed.protocol + ":" : undefined),
@@ -185,6 +207,15 @@ for (var i in parseTests) {
     },
     uTest = {};
   for (var j in parseTests[i]) uTest[j] = u[j];
+  // save for the formatting speed tests.
+  urlFormatTests[i] = urlParsed;
+  uriFormatTests[i] = uriParsed;
+    
+  try {
+    assert.deepEqual(parseTests[i], urlParsed);
+  } catch (ex) {
+    w("\033[41;1;30murl fail\033[0m "+i);
+  }
   
   try {
     assert.deepEqual(parseTests[i], uTest);
@@ -195,8 +226,62 @@ for (var i in parseTests) {
   }
 }
 
-w("\n\n---- SPEED TESTS ----\n (be patient, this takes a while)");
-function speedTest (parser) {
+
+w("\n\n---- RESOLVE TESTS ----\n");
+// construct the test harness for each to use resolveObject on the speed test,
+// since we are testing parsing speed separately.
+var uriResolveTests = [],
+  urlResolveTests = [];
+resolveTests.forEach(function (test) {
+  var from = test[0],
+    to = test[1],
+    expect = test[2],
+    // speed doesn't matter in the correctness test.
+    uriActual = uri.resolve(from, to),
+    urlActual = url.resolve(from, to);
+  
+  uriResolveTests.push([uri.parse(from), uri.parse(to)]);
+  urlResolveTests.push([url.parse(from), url.parse(to)]);
+
+  try {
+    assert.equal(expect, uriActual);
+  } catch (ex) {
+    w("\033[40;1;31muri fail\033[0m " + from + " + " + to);
+    w("expected: "+expect);
+    w("actual:   "+uriActual);
+  }
+  try {
+    assert.equal(expect, urlActual);
+  } catch (ex) {
+    w("\033[41;1;30murl fail\033[0m "+from+" + "+to);
+    w("expected: "+expect);
+    w("actual:   "+urlActual);
+  }
+});
+
+w("\n\n---- FORMAT TESTS ----\n");
+for (var i in parseTests) {
+  var uriActual = uri.format(uri.parse(i)),
+    urlActual = url.format(url.parse(i))
+  try {
+    assert.equal(i, uriActual);
+  } catch (ex) {
+    w("\033[40;1;31muri fail\033[0m " + i);
+    w("expected: "+i);
+    w("actual:   "+uriActual);
+  }
+  try {
+    assert.equal(i, urlActual);
+  } catch (ex) {
+    w("\033[41;1;30murl fail\033[0m "+i);
+    w("expected: "+i);
+    w("actual:   "+urlActual);
+  }
+}
+
+
+w("\n\n---- PARSE SPEED TESTS ----\n");
+function parseSpeedTest (parser) {
   var count = 0,
     timeout = 5000,
     go = true,
@@ -220,17 +305,90 @@ var testCount = 5, urlTests = [], uriTests = [];
 for (var i = 0; i < testCount; i ++) {
   // alternate who goes first to average out machine entropy.
   if (i%2) {
-    urlTests.push(speedTest(url).wait());
-    uriTests.push(speedTest(uri).wait());
+    urlTests.push(parseSpeedTest(url).wait());
+    uriTests.push(parseSpeedTest(uri).wait());
   } else {
-    uriTests.push(speedTest(uri).wait());
-    urlTests.push(speedTest(url).wait());
+    uriTests.push(parseSpeedTest(uri).wait());
+    urlTests.push(parseSpeedTest(url).wait());
   }
 }
-function avg(nums) {
-  var sum = 0;
-  nums.forEach(function (n) { sum+=n });
-  return sum/nums.length;
+
+w("\nScores: (higher is better)\n");
+w("Narwhal URI Module (with big regex and many fields):\n"+uriTests.join("\n"));
+w("MEAN: "+avg(uriTests)+"\n");
+w("New URL Module (with minimal regexes and few fields): \n"+urlTests.join("\n"));
+w("MEAN: "+avg(urlTests)+"\n");
+
+w("\n\n---- RESOLVE SPEED TESTS ----\n");
+function resolveSpeedTest (resolver, resolveTests) {
+  var count = 0,
+    timeout = 5000,
+    go = true,
+    start = new Date().getTime(),
+    now = start,
+    p = new process.Promise();
+  process.stdio.writeError(".");
+  setTimeout(function () { go = false }, timeout);
+  (function () {
+    resolveTests.forEach(function (test) {
+      var u = resolver.resolveObject(test[0], test[1]);
+      count ++;
+    });
+    if (go) setTimeout(arguments.callee);
+    else p.emitSuccess(count / ((new Date().getTime()) - start));
+  })();
+  return p;
+};
+var testCount = 5, urlTests = [], uriTests = [];
+for (var i = 0; i < testCount; i ++) {
+  // alternate who goes first to average out machine entropy.
+  if (i%2) {
+    urlTests.push(resolveSpeedTest(url, urlResolveTests).wait());
+    uriTests.push(resolveSpeedTest(uri, uriResolveTests).wait());
+  } else {
+    uriTests.push(resolveSpeedTest(uri, uriResolveTests).wait());
+    urlTests.push(resolveSpeedTest(url, urlResolveTests).wait());
+  }
+}
+
+w("\nScores: (higher is better)\n");
+w("Narwhal URI Module (with big regex and many fields):\n"+uriTests.join("\n"));
+w("MEAN: "+avg(uriTests)+"\n");
+w("New URL Module (with minimal regexes and few fields): \n"+urlTests.join("\n"));
+w("MEAN: "+avg(urlTests)+"\n");
+
+
+
+w("\n\n---- RESOLVE SPEED TESTS ----\n");
+function formatSpeedTests (formatter, formatTests) {
+  var count = 0,
+    timeout = 5000,
+    go = true,
+    start = new Date().getTime(),
+    now = start,
+    p = new process.Promise();
+  process.stdio.writeError(".");
+  setTimeout(function () { go = false }, timeout);
+  (function () {
+    for (var i in formatTests) {
+      var u = formatter.format(i);
+      count ++;
+    };
+    if (go) setTimeout(arguments.callee);
+    else p.emitSuccess(count / ((new Date().getTime()) - start));
+  })();
+  return p;
+};
+var testCount = 5, urlTests = [], uriTests = [];
+for (var i = 0; i < testCount; i ++) {
+  // alternate who goes first to average out machine entropy.
+  if (i%2) {
+    urlTests.push(formatSpeedTests(url, urlFormatTests).wait());
+    uriTests.push(formatSpeedTests(uri, uriFormatTests).wait());
+  } else {
+    uriTests.push(formatSpeedTests(uri, uriFormatTests).wait());
+    urlTests.push(formatSpeedTests(url, uriFormatTests).wait());
+  }
 }
 
 w("\nScores: (higher is better)\n");
