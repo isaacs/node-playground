@@ -8,7 +8,9 @@ var uri = require("uri"),
     var sum = 0;
     nums.forEach(function (n) { sum+=n });
     return sum/nums.length;
-  };
+  },
+  SPEED_TEST_COUNT = 10,
+  SPEED_TEST_TIMEOUT = 1000;
 
 var parseTests = {
   "http://www.narwhaljs.org/blog/categories?id=news" : {
@@ -283,13 +285,12 @@ for (var i in parseTests) {
 w("\n\n---- PARSE SPEED TESTS ----\n");
 function parseSpeedTest (parser) {
   var count = 0,
-    timeout = 5000,
     go = true,
     start = new Date().getTime(),
     now = start,
     p = new process.Promise();
   process.stdio.writeError(".");
-  setTimeout(function () { go = false }, timeout);
+  setTimeout(function () { go = false }, SPEED_TEST_TIMEOUT);
   (function () {
     for (var i in parseTests) {
       var u = parser.parse(i);
@@ -301,8 +302,8 @@ function parseSpeedTest (parser) {
   return p;
 };
 
-var testCount = 5, urlTests = [], uriTests = [];
-for (var i = 0; i < testCount; i ++) {
+var urlTests = [], uriTests = [];
+for (var i = 0; i < SPEED_TEST_COUNT; i ++) {
   // alternate who goes first to average out machine entropy.
   if (i%2) {
     urlTests.push(parseSpeedTest(url).wait());
@@ -322,13 +323,12 @@ w("MEAN: "+avg(urlTests)+"\n");
 w("\n\n---- RESOLVE SPEED TESTS ----\n");
 function resolveSpeedTest (resolver, resolveTests) {
   var count = 0,
-    timeout = 5000,
     go = true,
     start = new Date().getTime(),
     now = start,
     p = new process.Promise();
   process.stdio.writeError(".");
-  setTimeout(function () { go = false }, timeout);
+  setTimeout(function () { go = false }, SPEED_TEST_TIMEOUT);
   (function () {
     resolveTests.forEach(function (test) {
       var u = resolver.resolveObject(test[0], test[1]);
@@ -339,8 +339,8 @@ function resolveSpeedTest (resolver, resolveTests) {
   })();
   return p;
 };
-var testCount = 5, urlTests = [], uriTests = [];
-for (var i = 0; i < testCount; i ++) {
+var urlTests = [], uriTests = [];
+for (var i = 0; i < SPEED_TEST_COUNT; i ++) {
   // alternate who goes first to average out machine entropy.
   if (i%2) {
     urlTests.push(resolveSpeedTest(url, urlResolveTests).wait());
@@ -359,19 +359,19 @@ w("MEAN: "+avg(urlTests)+"\n");
 
 
 
-w("\n\n---- RESOLVE SPEED TESTS ----\n");
+w("\n\n---- FORMAT SPEED TESTS ----\n");
 function formatSpeedTests (formatter, formatTests) {
   var count = 0,
-    timeout = 5000,
     go = true,
     start = new Date().getTime(),
     now = start,
     p = new process.Promise();
   process.stdio.writeError(".");
-  setTimeout(function () { go = false }, timeout);
+  setTimeout(function () { go = false }, SPEED_TEST_TIMEOUT);
   (function () {
     for (var i in formatTests) {
-      var u = formatter.format(i);
+      var u = formatter.format(formatTests[i]);
+      // w(u);
       count ++;
     };
     if (go) setTimeout(arguments.callee);
@@ -379,8 +379,8 @@ function formatSpeedTests (formatter, formatTests) {
   })();
   return p;
 };
-var testCount = 5, urlTests = [], uriTests = [];
-for (var i = 0; i < testCount; i ++) {
+var urlTests = [], uriTests = [];
+for (var i = 0; i < SPEED_TEST_COUNT; i ++) {
   // alternate who goes first to average out machine entropy.
   if (i%2) {
     urlTests.push(formatSpeedTests(url, urlFormatTests).wait());
