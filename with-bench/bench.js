@@ -25,7 +25,7 @@ function run (fn, count, time) {
     for (var n = count; n > 0; n --) fn();
     runCount ++;
     if (go) setTimeout(arguments.callee);
-    else p.emitSuccess(runCount / ((new Date().getTime()) - start));
+    else p.emitSuccess((runCount * count) / ((new Date().getTime()) - start));
   })();
   return p;
 };
@@ -82,7 +82,9 @@ function times (nums) {
   return Math.round((Math.max.apply(Math, nums)/Math.min.apply(Math,nums)) * 100) / 100;
 }
 function oom (nums) {
-  return Math.round( Math.max.apply(Math, nums)/(Math.min.apply(Math,nums) * 10));
+  var ratio = Math.max.apply(Math, nums)/Math.min.apply(Math,nums), oom = 0;
+  while ( (ratio/=10) > 1 ) oom++;
+  return oom;
 }
 function avg (nums) {
   var sum = 0;
