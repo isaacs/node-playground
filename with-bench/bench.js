@@ -1,16 +1,14 @@
 var testWith = require("./with").test,
   testFunc = require("./func").test;
 
-// just make sure it's pre-loaded
-require("assert");
-
 exports.COUNT = 1000; // how many runs per iteration
 exports.TIME = 5000; // how many ms to run tests for.
 exports.COMPARE_COUNT = 8; // default number of runs for comparisons.
 exports.run = run;
 exports.compare = compare;
-  
+
 show(compare(testWith, testFunc), "with(){}", "function(){}");
+
 
 
 function run (fn, count, time) {
@@ -74,7 +72,8 @@ function show (results, m1, m2) {
     ("\n")
     ("Winner: " + (averages[0] > averages[1] ? m1 : m2 ))
     (pct(averages)+"% faster")
-    (times(averages)+" times as fast");
+    (times(averages)+" times as fast")
+    (oom(averages)+" order(s) of magnitude faster");
 };
 function pct (nums) {
   return Math.round((1-(Math.min.apply(Math, nums)/Math.max.apply(Math,nums))) * 10000) / 100;
@@ -82,7 +81,9 @@ function pct (nums) {
 function times (nums) {
   return Math.round((Math.max.apply(Math, nums)/Math.min.apply(Math,nums)) * 100) / 100;
 }
-
+function oom (nums) {
+  return Math.round( Math.max.apply(Math, nums)/(Math.min.apply(Math,nums) * 10));
+}
 function avg (nums) {
   var sum = 0;
   nums.forEach(function (n) { sum+=n });
