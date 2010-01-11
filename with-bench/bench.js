@@ -44,10 +44,10 @@ function compare (fn1, fn2, compareCount, count, time) {
   var first = (Math.floor(Math.random() * 2)) ? fn1 : fn2,
     second = (first === fn1) ? fn2 : fn1,
     results = [[],[]];
-  if (first === fn1) print("normal order");
-  else print("swapped order");
+  // if (first === fn1) print("normal order");
+  // else print("swapped order");
   for (var i = 0; i < compareCount; i ++) {
-    print(".", false);
+    // print(".", false);
     var score = run(i % 2 ? second : first, count, time).wait();
     // print(i+" "+(i%2) + " " +((i%2 ? first : second).name) + " "+score);
     results[ i % 2 ].push( score );
@@ -72,10 +72,15 @@ function show (results, m1, m2) {
     (results[1].join("\n"))
     ("Average (mean) "+averages[1])
     ("\n")
-    ("Winner: " + (averages[0] > averages[1] ? m1 : m2 )+" by "+pct(averages)+"%");
+    ("Winner: " + (averages[0] > averages[1] ? m1 : m2 ))
+    (pct(averages)+"% faster")
+    (times(averages)+" times as fast");
 };
 function pct (nums) {
   return Math.round((1-(Math.min.apply(Math, nums)/Math.max.apply(Math,nums))) * 10000) / 100;
+}
+function times (nums) {
+  return Math.round((Math.max.apply(Math, nums)/Math.min.apply(Math,nums)) * 100) / 100;
 }
 
 function avg (nums) {
