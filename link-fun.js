@@ -7,18 +7,19 @@ function chain (i) {
     C.items.push(link);
     return CHAIN;
   };
+  
+  CHAIN.clone = function () {
+    var code = "(function (chain) { return "+this.toString()+"})";
+    return process.compile(code, "chain-clone")(chain);
+  };
+  
   CHAIN.isChain = true;
   CHAIN.getItems = function () { return C.items.slice(0) };
   var args = arguments;
   CHAIN.toString = function (trim, l) {
     l = l || 1;
     var s = "";
-    if (!trim) {
-      s = "\n"
-      for (var i = 0; i < l; i ++) {
-        s += "  ";
-      }
-    }
+    if (!trim) for (var i = 0, s = "\n"; i < l; i ++) s += "  ";
     return "chain"+s+"(" +
     this.getItems().map(function (link) { return link.map(function (link) {
       if (link.isChain) return link.toString(trim, l + 1);
@@ -62,3 +63,5 @@ sys.puts("\nwalking m");
 walk(m, sys.puts);
 sys.puts("\nwalking n");
 walk(n, sys.puts);
+sys.puts("\nwalking a clone of n")
+walk(n.clone(), sys.puts);
