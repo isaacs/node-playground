@@ -25,6 +25,7 @@ function chain (i) {
       if (link.isChain) return link.toString(trim, l + 1);
       return JSON.stringify(link);
     })}).join(")"+s+"(") + ")" };
+    
   return CHAIN.apply(this, arguments);
 };
 

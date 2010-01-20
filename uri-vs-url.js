@@ -9,7 +9,7 @@ var uri = require("uri"),
     nums.forEach(function (n) { sum+=n });
     return sum/nums.length;
   },
-  SPEED_TEST_COUNT = 10,
+  SPEED_TEST_COUNT = 5,
   SPEED_TEST_TIMEOUT = 1000;
 
 var parseTests = {

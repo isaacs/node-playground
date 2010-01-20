@@ -1,0 +1,17 @@
+PACKAGE=nodejs
+NODE_VERSION=0.1.21
+VERSION=$(NODE_VERSION)
+PRODUCT_NAME=nodejs
+SHORT_DESC=Evented IO in JavaScript
+LONG_DESC=$(SHORT_DESC) See http://nodejs.org for more information.
+CUSTODIAN=isaacs@yahoo-inc.com http://nodejs.org/
+
+node_source=http://s3.amazonaws.com/four.livejournal/20091206/node-v$(NODE_VERSION).tar.gz
+
+src=`( [ -d node-v$(NODE_VERSION) ] || curl $(node_source) | tar -xz ) && echo node-v$(NODE_VERSION)`
+
+find 0755 - - src/$(src)/ ./$(src)
+
+YINST post-activate cd $(ROOT)/src/$(src) && ./configure --prefix=$(ROOT) && make clean && make && make install
+
+YINST pre-deactivate cd $(ROOT)/src/$(src) && make uninstall
