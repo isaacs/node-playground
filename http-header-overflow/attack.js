@@ -5,11 +5,19 @@ conn.forceClose();
 conn.addListener("connect", function () {
   sys.debug("connecting...");
   conn.send("GET /lulz HTTP/1.1\r\n");
-  var i = 0;
-  while (true) {
-    conn.send("all-your-base: are belong to us.\r\n");
-    i++;
-    if (!(i%1000000)) sys.puts(i +" bases pwned")
-  }
+  conn.addListener("drain", function () { pwn(conn) });
+  pwn(conn);
 });
+
+var i = 0;
+function pwn (conn) {
+  var j = 0;
+  while (j < 1000000) {
+    conn.send("all-your-base: are belong to us.\r\n");
+    j++;
+  }
+  i++;
+  sys.puts(i +" million bases pwned");
+};
+
 conn.connect(8000);
