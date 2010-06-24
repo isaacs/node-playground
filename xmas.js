@@ -6,7 +6,7 @@ var s = " \u2605",
   oc = [21,33,34,35,36,37],
   l = "\u005e";
 
-function w (s) { process.stdio.writeError(s) };
+function w (s) { process.binding("stdio").writeError(s) };
 
 w("\n");
 (function T (H) {
