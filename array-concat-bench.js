@@ -1,5 +1,4 @@
 #!/usr/bin/env node-bench
-
 var list = [
   "foo",
   "bar",
@@ -18,7 +17,7 @@ exports.compare = {
     var str = list.join("");
   },
   concat : function () {
-    var str = ("").concat(list);
+    var str = String.prototype.concat.apply("", list);
   },
   strplus : function () {
     var str = "";

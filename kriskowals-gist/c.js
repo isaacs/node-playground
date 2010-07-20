@@ -1,19 +1,21 @@
 
 var sys = require("sys");
 function d (m, o) {
-  sys.debug("\n----\n"+m + ": " + JSON.stringify(o, null, 2)+"\n----\n");
+  sys.debug(m);
+  return;
+  sys.debug("\n----\n"+m + ": " + sys.inspect(o)+"\n----\n");
 }
 // d("before",module);
 
-module.setExports("this is ok");
+module.exports = ("this is ok");
 
 
 require("./b");
-// d("after",module);
+d("after",module);
 try {
-  module.setExports("but this isn't");
+  module.exports = ("but this isn't");
 } catch (ex) {
   sys.debug("got an error trying to setExport: "+ex.message);
 }
 
-// d("done",module);
+d("done",module);
